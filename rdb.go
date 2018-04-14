@@ -52,13 +52,13 @@ func parseRDB(path string) []Game {
 		fmt.Println("\nPOSITION:", int(rdb[pos]))
 		g := Game{ROM: ROM{}}
 
-		nfields := int(rdb[pos]) - 0x80
+		nfields := int(rdb[pos]) - MPF_FIXMAP
 		fmt.Println("Number of fields: ", nfields)
 		pos++
 
 		for i := 0; i < nfields; i++ {
 
-			len := int(rdb[pos]) - 0xA0
+			len := int(rdb[pos]) - MPF_FIXSTR
 			pos++
 			key := rdb[pos : pos+len]
 			fmt.Println("KEY:", string(key[:]))
@@ -79,8 +79,11 @@ func parseRDB(path string) []Game {
 			switch fieldtype {
 			case MPF_STR8, MPF_STR16, MPF_STR32:
 				pos++
-				len := int(rdb[pos])
-				pos++
+				lenlen := fieldtype - MPF_STR8 + 1
+				lenhex := fmt.Sprintf("%x", string(rdb[pos:pos+lenlen]))
+				i64, _ := strconv.ParseInt(lenhex, 16, 32)
+				len := int(i64)
+				pos += lenlen
 				value = rdb[pos : pos+len]
 				fmt.Println(string(value[:]))
 				pos += len
@@ -94,6 +97,13 @@ func parseRDB(path string) []Game {
 			case MPF_BIN8, MPF_BIN16, MPF_BIN32:
 				pos++
 				len := int(rdb[pos])
+				pos++
+				value = rdb[pos : pos+len]
+				fmt.Println(value)
+				pos += len
+			case MPF_MAP16, MPF_MAP32:
+				pow := float64(rdb[pos]) - MPF_MAP16
+				len := int(math.Pow(2, pow)) / 8
 				pos++
 				value = rdb[pos : pos+len]
 				fmt.Println(value)
