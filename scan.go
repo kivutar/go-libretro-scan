@@ -219,6 +219,11 @@ func parseRDB(path string) []Game {
 				fmt.Println(len)
 				pos++
 				pos += len
+			case "coop":
+				len := int(rdb[pos]) - 0xCB // CC -> 1
+				fmt.Println(len)
+				pos++
+				pos += len
 			case "crc":
 				if int(rdb[pos]) == 0xC4 {
 					pos++
