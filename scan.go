@@ -21,6 +21,8 @@ type Game struct {
 	Name        string
 	Description string
 	Genre       string
+	Developer   string
+	Publisher   string
 	ROM         ROM
 }
 
@@ -141,6 +143,44 @@ func parseRDB(path string) []Game {
 					g.Genre = string(value[:])
 					pos += len
 				}
+			case "developer":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Developer = string(value[:])
+					pos += len
+				} else {
+					fmt.Println("Raw")
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Developer = string(value[:])
+					pos += len
+				}
+			case "publisher":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Publisher = string(value[:])
+					pos += len
+				} else {
+					fmt.Println("Raw")
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Publisher = string(value[:])
+					pos += len
+				}
 			case "rom_name":
 				if int(rdb[pos]) == 0xD9 {
 					fmt.Println("String")
@@ -160,12 +200,24 @@ func parseRDB(path string) []Game {
 					pos += len
 				}
 			case "size":
+				len := int(rdb[pos]) - 0xCA // CE -> 4
+				fmt.Println(len)
 				pos++
-				len := 4
 				pos += len
 			case "releaseyear":
+				len := int(rdb[pos]) - 0xCB // CD -> 2
+				fmt.Println(len)
 				pos++
-				len := 2
+				pos += len
+			case "releasemonth":
+				len := int(rdb[pos]) - 0xCB // CC -> 1
+				fmt.Println(len)
+				pos++
+				pos += len
+			case "users":
+				len := int(rdb[pos]) - 0xCB // CC -> 1
+				fmt.Println(len)
+				pos++
 				pos += len
 			case "crc":
 				if int(rdb[pos]) == 0xC4 {
@@ -202,25 +254,6 @@ func parseRDB(path string) []Game {
 		output = append(output, g)
 	}
 
-	//	<83>
-	//		<A4>name<AF>Lutris Launcher
-	//		<AB>description<AF>Lutris Launcher
-	//		<A8>rom_name<B1>love-lutris.lutro
-	//	<83>
-	//		<A4>name<A6>Tetris
-	//		<AB>description<A6>Tetris
-	//		<A8>rom_name<B2>lutro-tetris.lutro
-	//	<84>
-	//		<A4>name<A9>Spaceship
-	//		<AB>description<A9>Spaceship
-	//		<A8>rom_name<B5>lutro-spaceship.lutro
-	//		<A9>developer<B3>Jean-André Santoni
-	//	<84>
-	//		<A4>name<A5>Snake
-	//		<AB>description<A5>Snake
-	//		<A8>rom_name<B1>lutro-snake.lutro
-	//		<A9>developer<B3>Jean-André Santoni
-
 	return output
 }
 
@@ -231,7 +264,7 @@ func loadDB(dir string) [][]Game {
 	}
 
 	var DB = [][]Game{}
-	for _, f := range files[16:17] {
+	for _, f := range files[43:44] {
 		dat := parseRDB(dir + f.Name())
 		DB = append(DB, dat)
 	}
