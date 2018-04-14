@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,6 +23,8 @@ type Game struct {
 	Genre       string
 	Developer   string
 	Publisher   string
+	Franchise   string
+	Serial      string
 	ROM         ROM
 }
 
@@ -63,211 +64,6 @@ func parseDAT(path string) []Game {
 	return output
 }
 
-func parseRDB(path string) []Game {
-	rdb, _ := ioutil.ReadFile(path)
-
-	var output []Game
-
-	pos := 0x10
-
-	for int(rdb[pos]) != 192 {
-		fmt.Println("POSITION:", int(rdb[pos]))
-		g := Game{ROM: ROM{}}
-
-		nfields := int(rdb[pos]) - 0x80
-		fmt.Println("Number of fields: ", nfields)
-		pos++
-
-		for i := 0; i < nfields; i++ {
-
-			len := int(rdb[pos]) - 0xA0
-			pos++
-			key := rdb[pos : pos+len]
-			fmt.Println("KEY:", string(key[:]))
-			pos += len
-
-			switch string(key[:]) {
-			case "name":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
-					pos += len
-				} else {
-					fmt.Println("Raw")
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
-					pos += len
-				}
-			case "description":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Description = string(value[:])
-					pos += len
-				} else {
-					fmt.Println("Raw")
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Description = string(value[:])
-					pos += len
-				}
-			case "genre":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Genre = string(value[:])
-					pos += len
-				} else {
-					fmt.Println("Raw")
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Genre = string(value[:])
-					pos += len
-				}
-			case "developer":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Developer = string(value[:])
-					pos += len
-				} else {
-					fmt.Println("Raw")
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Developer = string(value[:])
-					pos += len
-				}
-			case "publisher":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Publisher = string(value[:])
-					pos += len
-				} else {
-					fmt.Println("Raw")
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.Publisher = string(value[:])
-					pos += len
-				}
-			case "rom_name":
-				if int(rdb[pos]) == 0xD9 {
-					fmt.Println("String")
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.ROM.Name = string(value[:])
-					pos += len
-				} else {
-					len := int(rdb[pos]) - 0xA0
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(string(value[:]))
-					g.ROM.Name = string(value[:])
-					pos += len
-				}
-			case "size":
-				pow := float64(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
-				len := int(math.Pow(2, pow)) / 8
-				fmt.Println(len)
-				pos++
-				pos += len
-			case "releaseyear":
-				pow := float64(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
-				len := int(math.Pow(2, pow)) / 8
-				fmt.Println(len)
-				pos++
-				pos += len
-			case "releasemonth":
-				pow := float64(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
-				len := int(math.Pow(2, pow)) / 8
-				fmt.Println(len)
-				pos++
-				pos += len
-			case "users":
-				pow := float64(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
-				len := int(math.Pow(2, pow)) / 8
-				fmt.Println(len)
-				pos++
-				pos += len
-			case "coop":
-				pow := float64(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
-				len := int(math.Pow(2, pow)) / 8
-				fmt.Println(len)
-				pos++
-				pos += len
-			case "crc":
-				if int(rdb[pos]) == 0xC4 {
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					str := fmt.Sprintf("%#x", string(value[:]))
-					u64, _ := strconv.ParseUint(str, 16, 32)
-					g.ROM.CRC32 = uint32(u64)
-					pos += len
-				}
-			case "md5":
-				if int(rdb[pos]) == 0xC4 {
-					pos++
-					len := int(rdb[pos])
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(value)
-					pos += len
-				}
-			case "sha1":
-				if int(rdb[pos]) == 0xC4 {
-					pos++
-					len := int(rdb[pos])
-					fmt.Println(len)
-					pos++
-					value := rdb[pos : pos+len]
-					fmt.Println(value)
-					pos += len
-				}
-			}
-		}
-		output = append(output, g)
-	}
-
-	return output
-}
-
 func loadDB(dir string) [][]Game {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -275,7 +71,7 @@ func loadDB(dir string) [][]Game {
 	}
 
 	var DB = [][]Game{}
-	for _, f := range files[45:46] {
+	for _, f := range files {
 		dat := parseRDB(dir + f.Name())
 		DB = append(DB, dat)
 	}
