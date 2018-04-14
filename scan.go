@@ -7,8 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"time"
 )
 
@@ -29,41 +27,7 @@ type Game struct {
 	ROM         ROM
 }
 
-func parseDAT(path string) []Game {
-	dat, _ := ioutil.ReadFile(path)
-
-	r, _ := regexp.Compile(`(?s)game \((.*?)\n\)\n`)
-	games := r.FindAllStringSubmatch(string(dat[:]), -1)
-
-	var output []Game
-
-	for _, game := range games {
-		r2, _ := regexp.Compile(`\tname "(.*?)"`)
-		name := r2.FindStringSubmatch(game[1])
-
-		r3, _ := regexp.Compile(`(?s)\trom \( (.*?) \)`)
-		rom := r3.FindStringSubmatch(game[1])
-
-		r4, _ := regexp.Compile(`crc (\w*?) `)
-		crc := r4.FindStringSubmatch(rom[1])
-
-		u64, err := strconv.ParseUint(crc[1], 16, 32)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		g := Game{
-			Name: name[1],
-			ROM: ROM{
-				CRC32: uint32(u64),
-			},
-		}
-
-		output = append(output, g)
-	}
-
-	return output
-}
+var found uint64
 
 func loadDB(dir string) [][]Game {
 	files, err := ioutil.ReadDir(dir)
@@ -95,7 +59,8 @@ func allFilesIn(dir string) []string {
 func findInDat(dat []Game, CRC32 uint32) {
 	for _, game := range dat {
 		if CRC32 == game.ROM.CRC32 {
-			fmt.Printf("Found %s\n", game.Name)
+			//fmt.Printf("Found %s\n", game.Name)
+			found++
 		}
 	}
 }
@@ -112,7 +77,7 @@ func main() {
 
 	DB := loadDB("libretro-database/rdb/")
 	roms := allFilesIn("../Downloads/No-Intro/")
-	fmt.Println(len(DB), len(roms))
+	fmt.Println(len(DB), "RDB files and", len(roms), "zips to scan.")
 
 	elapsed := time.Since(start)
 	fmt.Println("Loading DB took ", elapsed)
@@ -121,11 +86,14 @@ func main() {
 	for _, f := range roms {
 		z, _ := zip.OpenReader(f)
 		for _, rom := range z.File {
-			findInDB(DB, rom.CRC32)
+			if rom.CRC32 > 0 {
+				findInDB(DB, rom.CRC32)
+			}
 		}
 		z.Close()
 	}
 
 	elapsed2 := time.Since(scanstart)
-	fmt.Println("Scanning ROMs took ", elapsed2)
+	fmt.Println("Scanning ROMs took", elapsed2)
+	fmt.Println("Found", found)
 }
