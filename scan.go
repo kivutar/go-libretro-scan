@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -56,19 +57,21 @@ func allFilesIn(dir string) []string {
 	return roms
 }
 
-func findInDat(dat []Game, CRC32 uint32) {
-	for _, game := range dat {
-		if CRC32 == game.ROM.CRC32 {
-			//fmt.Printf("Found %s\n", game.Name)
-			found++
-		}
-	}
-}
-
 func findInDB(DB [][]Game, CRC32 uint32) {
+	var wg sync.WaitGroup
+	wg.Add(len(DB))
 	for _, dat := range DB {
-		findInDat(dat, CRC32)
+		go func(dat []Game, CRC32 uint32) {
+			for _, game := range dat {
+				if CRC32 == game.ROM.CRC32 {
+					//fmt.Printf("Found %s\n", game.Name)
+					found++
+				}
+			}
+			wg.Done()
+		}(dat, CRC32)
 	}
+	wg.Wait()
 }
 
 func main() {
