@@ -1,7 +1,6 @@
 package main
 
 import (
-	"archive/zip"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,12 +12,15 @@ import (
 )
 
 type ROM struct {
+	Name  string
 	CRC32 uint32
+	Size  uint64
 }
 
 type Game struct {
-	Name string
-	ROM  ROM
+	Name        string
+	Description string
+	ROM         ROM
 }
 
 func parseDAT(path string) []Game {
@@ -57,15 +59,147 @@ func parseDAT(path string) []Game {
 	return output
 }
 
+func parseRDB(path string) []Game {
+	rdb, _ := ioutil.ReadFile(path)
+
+	var output []Game
+
+	pos := 0x10
+
+	for int(rdb[pos]) != 192 {
+		fmt.Println(int(rdb[pos]))
+		g := Game{ROM: ROM{}}
+
+		nfields := int(rdb[pos]) - 0x80
+		fmt.Println("nfields: ", nfields)
+		pos++
+
+		for i := 0; i <= nfields; i++ {
+
+			len := int(rdb[pos]) - 0xA0
+			pos++
+			key := rdb[pos : pos+len]
+			fmt.Println(string(key[:]))
+			pos += len
+
+			switch string(key[:]) {
+			case "name":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				} else {
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				}
+			case "description":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				} else {
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				}
+			case "rom_name":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				} else {
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Name = string(value[:])
+					pos += len
+				}
+			case "size":
+				pos++
+				len := 4
+				pos += len
+			case "releaseyear":
+				pos++
+				len := 2
+				pos += len
+			case "crc":
+				pos++
+				pos++
+				len := 4
+				value := rdb[pos : pos+len]
+				str := fmt.Sprintf("%#x", string(value[:]))
+				u64, _ := strconv.ParseUint(str, 16, 32)
+				g.ROM.CRC32 = uint32(u64)
+				pos += len
+			case "md5":
+				pos++
+				pos++
+				len := 16
+				pos += len
+			case "sha1":
+				pos++
+				pos++
+				len := 20
+				pos += len
+			}
+		}
+		output = append(output, g)
+	}
+
+	//	<83>
+	//		<A4>name<AF>Lutris Launcher
+	//		<AB>description<AF>Lutris Launcher
+	//		<A8>rom_name<B1>love-lutris.lutro
+	//	<83>
+	//		<A4>name<A6>Tetris
+	//		<AB>description<A6>Tetris
+	//		<A8>rom_name<B2>lutro-tetris.lutro
+	//	<84>
+	//		<A4>name<A9>Spaceship
+	//		<AB>description<A9>Spaceship
+	//		<A8>rom_name<B5>lutro-spaceship.lutro
+	//		<A9>developer<B3>Jean-André Santoni
+	//	<84>
+	//		<A4>name<A5>Snake
+	//		<AB>description<A5>Snake
+	//		<A8>rom_name<B1>lutro-snake.lutro
+	//		<A9>developer<B3>Jean-André Santoni
+
+	return output
+}
+
 func loadDB(dir string) [][]Game {
-	nointrodats, err := ioutil.ReadDir(dir)
+	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var DB = [][]Game{}
-	for _, nointrodat := range nointrodats {
-		dat := parseDAT(dir + nointrodat.Name())
+	for _, f := range files[11:12] {
+		dat := parseRDB(dir + f.Name())
 		DB = append(DB, dat)
 	}
 
@@ -101,21 +235,21 @@ func main() {
 
 	start := time.Now()
 
-	DB := loadDB("libretro-database/metadat/no-intro/")
+	DB := loadDB("libretro-database/rdb/")
 	roms := allFilesIn("../Downloads/No-Intro/")
 	fmt.Println(len(DB), len(roms))
 
 	elapsed := time.Since(start)
 	fmt.Println("Loading DB took ", elapsed)
-	scanstart := time.Now()
+	// scanstart := time.Now()
 
-	for _, f := range roms {
-		z, _ := zip.OpenReader(f)
-		for _, rom := range z.File {
-			go findInDB(DB, rom.CRC32)
-		}
-	}
+	// for _, f := range roms {
+	// 	z, _ := zip.OpenReader(f)
+	// 	for _, rom := range z.File {
+	// 		go findInDB(DB, rom.CRC32)
+	// 	}
+	// }
 
-	elapsed2 := time.Since(scanstart)
-	fmt.Println("Scanning ROMs took ", elapsed2)
+	// elapsed2 := time.Since(scanstart)
+	// fmt.Println("Scanning ROMs took ", elapsed2)
 }
