@@ -48,12 +48,12 @@ func parseRDB(path string) []Game {
 
 	pos := 0x10
 
-	for int(rdb[pos]) != 192 {
-		fmt.Println("\nPOSITION:", int(rdb[pos]))
+	for int(rdb[pos]) != 192 && int(rdb[pos]) != 223 {
+		//fmt.Println("\nPOSITION:", int(rdb[pos]))
 		g := Game{ROM: ROM{}}
 
 		nfields := int(rdb[pos]) - MPF_FIXMAP
-		fmt.Println("Number of fields: ", nfields)
+		//fmt.Println("Number of fields: ", nfields)
 		pos++
 
 		for i := 0; i < nfields; i++ {
@@ -61,7 +61,7 @@ func parseRDB(path string) []Game {
 			len := int(rdb[pos]) - MPF_FIXSTR
 			pos++
 			key := rdb[pos : pos+len]
-			fmt.Println("KEY:", string(key[:]))
+			//fmt.Println("KEY:", string(key[:]))
 			pos += len
 
 			fieldtype := int(rdb[pos])
@@ -72,7 +72,7 @@ func parseRDB(path string) []Game {
 				len := int(rdb[pos]) - MPF_FIXSTR
 				pos++
 				value = rdb[pos : pos+len]
-				fmt.Println(string(value[:]))
+				//fmt.Println(string(value[:]))
 				pos += len
 			}
 
@@ -85,28 +85,28 @@ func parseRDB(path string) []Game {
 				len := int(i64)
 				pos += lenlen
 				value = rdb[pos : pos+len]
-				fmt.Println(string(value[:]))
+				//fmt.Println(string(value[:]))
 				pos += len
 			case MPF_UINT8, MPF_UINT16, MPF_UINT32, MPF_UINT64:
 				pow := float64(rdb[pos]) - 0xC9
 				len := int(math.Pow(2, pow)) / 8
 				pos++
 				value = rdb[pos : pos+len]
-				fmt.Println(value)
+				//fmt.Println(value)
 				pos += len
 			case MPF_BIN8, MPF_BIN16, MPF_BIN32:
 				pos++
 				len := int(rdb[pos])
 				pos++
 				value = rdb[pos : pos+len]
-				fmt.Println(value)
+				//fmt.Println(value)
 				pos += len
 			case MPF_MAP16, MPF_MAP32:
 				pow := float64(rdb[pos]) - MPF_MAP16
 				len := int(math.Pow(2, pow)) / 8
 				pos++
 				value = rdb[pos : pos+len]
-				fmt.Println(value)
+				//fmt.Println(value)
 				pos += len
 			}
 
@@ -128,11 +128,11 @@ func parseRDB(path string) []Game {
 			case "rom_name":
 				g.ROM.Name = string(value[:])
 			case "size":
-				value2 := fmt.Sprintf("%#x", string(value[:]))
+				value2 := fmt.Sprintf("%x", string(value[:]))
 				u64, _ := strconv.ParseUint(value2, 16, 32)
 				g.ROM.Size = u64
 			case "crc":
-				value2 := fmt.Sprintf("%#x", string(value[:]))
+				value2 := fmt.Sprintf("%x", string(value[:]))
 				u64, _ := strconv.ParseUint(value2, 16, 32)
 				g.ROM.CRC32 = uint32(u64)
 			}

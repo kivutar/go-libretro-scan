@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -72,8 +73,9 @@ func loadDB(dir string) [][]Game {
 
 	var DB = [][]Game{}
 	for _, f := range files {
-		dat := parseRDB(dir + f.Name())
-		DB = append(DB, dat)
+		rdb := parseRDB(dir + f.Name())
+		//fmt.Println(rdb)
+		DB = append(DB, rdb)
 	}
 
 	return DB
@@ -93,14 +95,14 @@ func allFilesIn(dir string) []string {
 func findInDat(dat []Game, CRC32 uint32) {
 	for _, game := range dat {
 		if CRC32 == game.ROM.CRC32 {
-			fmt.Printf("Found %v\n", game.Name)
+			fmt.Printf("Found %s\n", game.Name)
 		}
 	}
 }
 
 func findInDB(DB [][]Game, CRC32 uint32) {
 	for _, dat := range DB {
-		findInDat(dat, CRC32)
+		go findInDat(dat, CRC32)
 	}
 }
 
@@ -114,15 +116,16 @@ func main() {
 
 	elapsed := time.Since(start)
 	fmt.Println("Loading DB took ", elapsed)
-	// scanstart := time.Now()
+	scanstart := time.Now()
 
-	// for _, f := range roms {
-	// 	z, _ := zip.OpenReader(f)
-	// 	for _, rom := range z.File {
-	// 		go findInDB(DB, rom.CRC32)
-	// 	}
-	// }
+	for _, f := range roms {
+		z, _ := zip.OpenReader(f)
+		for _, rom := range z.File {
+			findInDB(DB, rom.CRC32)
+		}
+		z.Close()
+	}
 
-	// elapsed2 := time.Since(scanstart)
-	// fmt.Println("Scanning ROMs took ", elapsed2)
+	elapsed2 := time.Since(scanstart)
+	fmt.Println("Scanning ROMs took ", elapsed2)
 }
