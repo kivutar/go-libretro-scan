@@ -67,7 +67,7 @@ func findInDat(dat []Game, CRC32 uint32) {
 
 func findInDB(DB [][]Game, CRC32 uint32) {
 	for _, dat := range DB {
-		go findInDat(dat, CRC32)
+		findInDat(dat, CRC32)
 	}
 }
 

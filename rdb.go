@@ -135,6 +135,7 @@ func parseRDB(path string) []Game {
 				value2 := fmt.Sprintf("%x", string(value[:]))
 				u64, _ := strconv.ParseUint(value2, 16, 32)
 				g.ROM.CRC32 = uint32(u64)
+				//fmt.Println(uint32(u64))
 			}
 		}
 		output = append(output, g)
