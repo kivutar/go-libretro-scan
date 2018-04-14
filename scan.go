@@ -20,6 +20,7 @@ type ROM struct {
 type Game struct {
 	Name        string
 	Description string
+	Genre       string
 	ROM         ROM
 }
 
@@ -67,19 +68,19 @@ func parseRDB(path string) []Game {
 	pos := 0x10
 
 	for int(rdb[pos]) != 192 {
-		fmt.Println(int(rdb[pos]))
+		fmt.Println("POSITION:", int(rdb[pos]))
 		g := Game{ROM: ROM{}}
 
 		nfields := int(rdb[pos]) - 0x80
-		fmt.Println("nfields: ", nfields)
+		fmt.Println("Number of fields: ", nfields)
 		pos++
 
-		for i := 0; i <= nfields; i++ {
+		for i := 0; i < nfields; i++ {
 
 			len := int(rdb[pos]) - 0xA0
 			pos++
 			key := rdb[pos : pos+len]
-			fmt.Println(string(key[:]))
+			fmt.Println("KEY:", string(key[:]))
 			pos += len
 
 			switch string(key[:]) {
@@ -94,6 +95,7 @@ func parseRDB(path string) []Game {
 					g.Name = string(value[:])
 					pos += len
 				} else {
+					fmt.Println("Raw")
 					len := int(rdb[pos]) - 0xA0
 					pos++
 					value := rdb[pos : pos+len]
@@ -109,14 +111,34 @@ func parseRDB(path string) []Game {
 					pos++
 					value := rdb[pos : pos+len]
 					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
+					g.Description = string(value[:])
 					pos += len
 				} else {
+					fmt.Println("Raw")
 					len := int(rdb[pos]) - 0xA0
 					pos++
 					value := rdb[pos : pos+len]
 					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
+					g.Description = string(value[:])
+					pos += len
+				}
+			case "genre":
+				if int(rdb[pos]) == 0xD9 {
+					fmt.Println("String")
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Genre = string(value[:])
+					pos += len
+				} else {
+					fmt.Println("Raw")
+					len := int(rdb[pos]) - 0xA0
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(string(value[:]))
+					g.Genre = string(value[:])
 					pos += len
 				}
 			case "rom_name":
@@ -127,14 +149,14 @@ func parseRDB(path string) []Game {
 					pos++
 					value := rdb[pos : pos+len]
 					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
+					g.ROM.Name = string(value[:])
 					pos += len
 				} else {
 					len := int(rdb[pos]) - 0xA0
 					pos++
 					value := rdb[pos : pos+len]
 					fmt.Println(string(value[:]))
-					g.Name = string(value[:])
+					g.ROM.Name = string(value[:])
 					pos += len
 				}
 			case "size":
@@ -146,24 +168,35 @@ func parseRDB(path string) []Game {
 				len := 2
 				pos += len
 			case "crc":
-				pos++
-				pos++
-				len := 4
-				value := rdb[pos : pos+len]
-				str := fmt.Sprintf("%#x", string(value[:]))
-				u64, _ := strconv.ParseUint(str, 16, 32)
-				g.ROM.CRC32 = uint32(u64)
-				pos += len
+				if int(rdb[pos]) == 0xC4 {
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					str := fmt.Sprintf("%#x", string(value[:]))
+					u64, _ := strconv.ParseUint(str, 16, 32)
+					g.ROM.CRC32 = uint32(u64)
+					pos += len
+				}
 			case "md5":
-				pos++
-				pos++
-				len := 16
-				pos += len
+				if int(rdb[pos]) == 0xC4 {
+					pos++
+					len := int(rdb[pos])
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(value)
+					pos += len
+				}
 			case "sha1":
-				pos++
-				pos++
-				len := 20
-				pos += len
+				if int(rdb[pos]) == 0xC4 {
+					pos++
+					len := int(rdb[pos])
+					fmt.Println(len)
+					pos++
+					value := rdb[pos : pos+len]
+					fmt.Println(value)
+					pos += len
+				}
 			}
 		}
 		output = append(output, g)
@@ -198,7 +231,7 @@ func loadDB(dir string) [][]Game {
 	}
 
 	var DB = [][]Game{}
-	for _, f := range files[11:12] {
+	for _, f := range files[16:17] {
 		dat := parseRDB(dir + f.Name())
 		DB = append(DB, dat)
 	}
