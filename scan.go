@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -200,27 +201,32 @@ func parseRDB(path string) []Game {
 					pos += len
 				}
 			case "size":
-				len := int(rdb[pos]) - 0xCA // CE -> 4
+				pow := int(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
+				len := int(math.Pow(float64(2), float64(pow))) / 8
 				fmt.Println(len)
 				pos++
 				pos += len
 			case "releaseyear":
-				len := int(rdb[pos]) - 0xCB // CD -> 2
+				pow := int(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
+				len := int(math.Pow(float64(2), float64(pow))) / 8
 				fmt.Println(len)
 				pos++
 				pos += len
 			case "releasemonth":
-				len := int(rdb[pos]) - 0xCB // CC -> 1
+				pow := int(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
+				len := int(math.Pow(float64(2), float64(pow))) / 8
 				fmt.Println(len)
 				pos++
 				pos += len
 			case "users":
-				len := int(rdb[pos]) - 0xCB // CC -> 1
+				pow := int(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
+				len := int(math.Pow(float64(2), float64(pow))) / 8
 				fmt.Println(len)
 				pos++
 				pos += len
 			case "coop":
-				len := int(rdb[pos]) - 0xCB // CC -> 1
+				pow := int(rdb[pos]) - 0xC9 // CC -> 8, CD -> 16, CE -> 32, CD -> 64
+				len := int(math.Pow(float64(2), float64(pow))) / 8
 				fmt.Println(len)
 				pos++
 				pos += len
@@ -269,7 +275,7 @@ func loadDB(dir string) [][]Game {
 	}
 
 	var DB = [][]Game{}
-	for _, f := range files[43:44] {
+	for _, f := range files[45:46] {
 		dat := parseRDB(dir + f.Name())
 		DB = append(DB, dat)
 	}
