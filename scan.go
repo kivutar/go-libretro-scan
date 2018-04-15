@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -59,26 +60,29 @@ func allFilesIn(dir string) []string {
 func findInDB(DB [][]Game, CRC32 uint32) {
 	var wg sync.WaitGroup
 	wg.Add(len(DB))
-	for _, dat := range DB {
-		go func(dat []Game, CRC32 uint32) {
-			for _, game := range dat {
+	for _, rdb := range DB {
+		go func(rdb []Game, CRC32 uint32) {
+			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
 					//fmt.Printf("Found %s\n", game.Name)
 					found++
 				}
 			}
 			wg.Done()
-		}(dat, CRC32)
+		}(rdb, CRC32)
 	}
 	wg.Wait()
 }
 
 func main() {
+	rompath := flag.String("roms", "", "Path to the folder you want to scan.")
+	rdbpath := flag.String("rdbs", "", "Path to the folder containing the RDB files.")
+	flag.Parse()
 
 	start := time.Now()
 
-	DB := loadDB("libretro-database/rdb/")
-	roms := allFilesIn("../testroms/")
+	DB := loadDB(*rdbpath)
+	roms := allFilesIn(*rompath)
 	fmt.Println(len(DB), "RDB files and", len(roms), "zips to scan.")
 
 	elapsed := time.Since(start)
