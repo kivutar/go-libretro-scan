@@ -17,12 +17,6 @@ type DB map[string]RDB
 
 type RDB []Game
 
-type ROM struct {
-	Name  string
-	CRC32 uint32
-	Size  uint64
-}
-
 type Game struct {
 	Name        string
 	Description string
@@ -31,7 +25,9 @@ type Game struct {
 	Publisher   string
 	Franchise   string
 	Serial      string
-	ROM         ROM
+	ROMName     string
+	Size        uint64
+	CRC32       uint32
 }
 
 var found uint64
@@ -69,7 +65,7 @@ func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 	for system, rdb := range db {
 		go func(rdb RDB, CRC32 uint32, system string) {
 			for _, game := range rdb {
-				if CRC32 == game.ROM.CRC32 {
+				if CRC32 == game.CRC32 {
 					CRC32Str := strconv.FormatUint(uint64(CRC32), 10)
 					lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 					lpl.WriteString(rompath + "#" + romname + "\n")

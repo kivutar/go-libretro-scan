@@ -58,15 +58,15 @@ func setField(g *Game, key string, value string) {
 	case "serial":
 		g.Serial = string(value[:])
 	case "rom_name":
-		g.ROM.Name = string(value[:])
+		g.ROMName = string(value[:])
 	case "size":
 		value2 := fmt.Sprintf("%x", string(value[:]))
 		u64, _ := strconv.ParseUint(value2, 16, 32)
-		g.ROM.Size = u64
+		g.Size = u64
 	case "crc":
 		value2 := fmt.Sprintf("%x", string(value[:]))
 		u64, _ := strconv.ParseUint(value2, 16, 32)
-		g.ROM.CRC32 = uint32(u64)
+		g.CRC32 = uint32(u64)
 		//fmt.Println(uint32(u64))
 	}
 }
@@ -81,7 +81,7 @@ func parseRDB(path string) RDB {
 	iskey := false
 	key := ""
 
-	g := Game{ROM: ROM{}}
+	g := Game{}
 
 	for int(rdb[pos]) != MPF_NIL {
 
@@ -94,11 +94,11 @@ func parseRDB(path string) RDB {
 		if fieldtype < MPF_FIXMAP {
 			//fmt.Println("INT")
 		} else if fieldtype < MPF_FIXARRAY {
-			if (g != Game{ROM: ROM{}}) {
+			if (g != Game{}) {
 				//fmt.Println(g)
 				output = append(output, g)
 			}
-			g = Game{ROM: ROM{}}
+			g = Game{}
 			//fmt.Printf("\n\nMAP with %d fields\n", fieldtype-MPF_FIXMAP)
 			pos++
 			iskey = true
