@@ -37,9 +37,9 @@ func loadDB(dir string) [][]Game {
 	}
 
 	var DB = [][]Game{}
-	for _, f := range files {
+	for _, f := range files[68:69] {
 		rdb := parseRDB(dir + f.Name())
-		//fmt.Println(rdb)
+		fmt.Println("Number of games in RDB:", len(rdb))
 		DB = append(DB, rdb)
 	}
 
