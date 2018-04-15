@@ -14,3 +14,7 @@ Usage:
 Todo:
 
  - [ ] Generate playlists
+ - [ ] Deduplicate entries based on checksums
+ - [ ] Extension based scanning (Lutro, Chailove)
+ - [ ] Arcade scanning
+ - [ ] CD scanning
