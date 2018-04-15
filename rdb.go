@@ -113,12 +113,16 @@ func parseRDB(path string) []Game {
 			fmt.Println("BIN:", value)
 			pos += len
 		case MPF_MAP16, MPF_MAP32:
-			pow := float64(rdb[pos]) - MPF_MAP16
-			len := int(math.Pow(2, pow)) / 8
+			len := 2
+			if int(rdb[pos]) == MPF_MAP32 {
+				len = 4
+			}
 			pos++
 			value = rdb[pos : pos+len]
 			fmt.Println("MAP:", value)
 			pos += len
+			iskey = true
+			continue
 		}
 
 		// keys
