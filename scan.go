@@ -78,7 +78,7 @@ func main() {
 	start := time.Now()
 
 	DB := loadDB("libretro-database/rdb/")
-	roms := allFilesIn("../Downloads/No-Intro/")
+	roms := allFilesIn("../testroms/")
 	fmt.Println(len(DB), "RDB files and", len(roms), "zips to scan.")
 
 	elapsed := time.Since(start)
@@ -86,13 +86,17 @@ func main() {
 	scanstart := time.Now()
 
 	for _, f := range roms {
-		z, _ := zip.OpenReader(f)
-		for _, rom := range z.File {
-			if rom.CRC32 > 0 {
-				findInDB(DB, rom.CRC32)
+		ext := filepath.Ext(f)
+		switch ext {
+		case ".zip":
+			z, _ := zip.OpenReader(f)
+			for _, rom := range z.File {
+				if rom.CRC32 > 0 {
+					findInDB(DB, rom.CRC32)
+				}
 			}
+			z.Close()
 		}
-		z.Close()
 	}
 
 	elapsed2 := time.Since(scanstart)
