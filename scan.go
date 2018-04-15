@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -68,12 +69,15 @@ func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 		go func(rdb RDB, CRC32 uint32, system string) {
 			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
-					fmt.Printf("%s#%s\n", rompath, romname)
-					fmt.Printf("%s\n", game.Name)
-					fmt.Printf("DETECT\n")
-					fmt.Printf("DETECT\n")
-					fmt.Printf("%d|crc\n", CRC32)
-					fmt.Printf("%s.lpl\n", system)
+					CRC32Str := strconv.FormatUint(uint64(CRC32), 10)
+					lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+					lpl.WriteString(rompath + "#" + romname + "\n")
+					lpl.WriteString(game.Name + "\n")
+					lpl.WriteString("DETECT\n")
+					lpl.WriteString("DETECT\n")
+					lpl.WriteString(CRC32Str + "|crc\n")
+					lpl.WriteString(system + ".lpl\n")
+					lpl.Close()
 					found++
 				}
 			}
