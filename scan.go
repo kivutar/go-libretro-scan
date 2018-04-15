@@ -39,7 +39,8 @@ func loadDB(dir string) [][]Game {
 
 	var DB = [][]Game{}
 	for _, f := range files {
-		rdb := parseRDB(dir + f.Name())
+		rdbPath := filepath.Join(dir, f.Name())
+		rdb := parseRDB(rdbPath)
 		DB = append(DB, rdb)
 	}
 
