@@ -13,7 +13,7 @@ Usage:
 
 Todo:
 
- - [ ] Generate playlists
+ - [x] Generate playlists
  - [ ] Deduplicate entries based on checksums
  - [ ] Extension based scanning (Lutro, Chailove)
  - [ ] Arcade scanning
