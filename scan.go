@@ -57,14 +57,19 @@ func allFilesIn(dir string) []string {
 	return roms
 }
 
-func findInDB(DB [][]Game, CRC32 uint32) {
+func findInDB(DB [][]Game, rompath string, romname string, CRC32 uint32) {
 	var wg sync.WaitGroup
 	wg.Add(len(DB))
 	for _, rdb := range DB {
 		go func(rdb []Game, CRC32 uint32) {
 			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
-					//fmt.Printf("Found %s\n", game.Name)
+					fmt.Printf("%s#%s\n", rompath, romname)
+					fmt.Printf("%s\n", game.Name)
+					fmt.Printf("DETECT\n")
+					fmt.Printf("DETECT\n")
+					fmt.Printf("%d|crc\n", CRC32)
+					fmt.Printf("Foo.lpl\n")
 					found++
 				}
 			}
@@ -96,7 +101,7 @@ func main() {
 			z, _ := zip.OpenReader(f)
 			for _, rom := range z.File {
 				if rom.CRC32 > 0 {
-					findInDB(DB, rom.CRC32)
+					findInDB(DB, f, rom.Name, rom.CRC32)
 				}
 			}
 			z.Close()
