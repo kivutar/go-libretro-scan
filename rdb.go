@@ -55,36 +55,36 @@ func parseRDB(path string) []Game {
 
 	for int(rdb[pos]) != MPF_NIL {
 
-		fmt.Printf("POSITION: %#x\n", pos)
+		//fmt.Printf("POSITION: %#x\n", pos)
 
 		fieldtype := int(rdb[pos])
 
 		var value []byte
 
 		if fieldtype < MPF_FIXMAP {
-			fmt.Println("INT")
+			//fmt.Println("INT")
 		} else if fieldtype < MPF_FIXARRAY {
 			if (g != Game{ROM: ROM{}}) {
-				fmt.Println(g)
+				//fmt.Println(g)
 				output = append(output, g)
 			}
 			g = Game{ROM: ROM{}}
-			fmt.Printf("\n\nMAP with %d fields\n", fieldtype-MPF_FIXMAP)
+			//fmt.Printf("\n\nMAP with %d fields\n", fieldtype-MPF_FIXMAP)
 			pos++
 			iskey = true
 			continue
 			// Read map
 		} else if fieldtype < MPF_FIXSTR {
 			// len := fieldtype - MPF_FIXARRAY
-			fmt.Println("ARRAY")
+			//fmt.Println("ARRAY")
 		} else if fieldtype < MPF_NIL {
 			len := int(rdb[pos]) - MPF_FIXSTR
 			pos++
 			value = rdb[pos : pos+len]
-			fmt.Println("STR:", string(value[:]))
+			//fmt.Println("STR:", string(value[:]))
 			pos += len
 		} else if fieldtype > MPF_MAP32 {
-			fmt.Println("Read int")
+			//fmt.Println("Read int")
 		}
 
 		switch fieldtype {
@@ -96,21 +96,21 @@ func parseRDB(path string) []Game {
 			len := int(i64)
 			pos += lenlen
 			value = rdb[pos : pos+len]
-			fmt.Println("STR:", string(value[:]))
+			//fmt.Println("STR:", string(value[:]))
 			pos += len
 		case MPF_UINT8, MPF_UINT16, MPF_UINT32, MPF_UINT64:
 			pow := float64(rdb[pos]) - 0xC9
 			len := int(math.Pow(2, pow)) / 8
 			pos++
 			value = rdb[pos : pos+len]
-			fmt.Println("UINT:", value)
+			//fmt.Println("UINT:", value)
 			pos += len
 		case MPF_BIN8, MPF_BIN16, MPF_BIN32:
 			pos++
 			len := int(rdb[pos])
 			pos++
 			value = rdb[pos : pos+len]
-			fmt.Println("BIN:", value)
+			//fmt.Println("BIN:", value)
 			pos += len
 		case MPF_MAP16, MPF_MAP32:
 			len := 2
@@ -119,7 +119,7 @@ func parseRDB(path string) []Game {
 			}
 			pos++
 			value = rdb[pos : pos+len]
-			fmt.Println("MAP:", value)
+			//fmt.Println("MAP:", value)
 			pos += len
 			iskey = true
 			continue
@@ -128,7 +128,7 @@ func parseRDB(path string) []Game {
 		// keys
 		if iskey {
 			key = string(value[:])
-			fmt.Println("KEY SET TO:", key)
+			//fmt.Println("KEY SET TO:", key)
 			iskey = false
 		} else {
 			// fields
@@ -157,7 +157,7 @@ func parseRDB(path string) []Game {
 				value2 := fmt.Sprintf("%x", string(value[:]))
 				u64, _ := strconv.ParseUint(value2, 16, 32)
 				g.ROM.CRC32 = uint32(u64)
-				fmt.Println(uint32(u64))
+				//fmt.Println(uint32(u64))
 			}
 			iskey = true
 		}
