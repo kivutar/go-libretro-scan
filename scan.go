@@ -68,20 +68,20 @@ func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 	wg.Add(len(db))
 	for system, rdb := range db {
 		go func(rdb RDB, CRC32 uint32, system string) {
-			lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
 					CRC32Str := strconv.FormatUint(uint64(CRC32), 10)
+					lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 					lpl.WriteString(rompath + "#" + romname + "\n")
 					lpl.WriteString(game.Name + "\n")
 					lpl.WriteString("DETECT\n")
 					lpl.WriteString("DETECT\n")
 					lpl.WriteString(CRC32Str + "|crc\n")
 					lpl.WriteString(system + ".lpl\n")
+					lpl.Close()
 					found++
 				}
 			}
-			lpl.Close()
 			wg.Done()
 		}(rdb, CRC32, system)
 	}
