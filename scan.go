@@ -42,7 +42,9 @@ func loadDB(dir string) DB {
 
 	db := make(DB)
 	for _, f := range files {
-		db[f.Name()] = parseRDB(dir + f.Name())
+		filename := f.Name()
+		system := filename[0 : len(filename)-4]
+		db[system] = parseRDB(dir + f.Name())
 	}
 
 	return db
@@ -62,8 +64,8 @@ func allFilesIn(dir string) []string {
 func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 	var wg sync.WaitGroup
 	wg.Add(len(db))
-	for _, rdb := range db {
-		go func(rdb RDB, CRC32 uint32) {
+	for system, rdb := range db {
+		go func(rdb RDB, CRC32 uint32, system string) {
 			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
 					fmt.Printf("%s#%s\n", rompath, romname)
@@ -71,12 +73,12 @@ func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 					fmt.Printf("DETECT\n")
 					fmt.Printf("DETECT\n")
 					fmt.Printf("%d|crc\n", CRC32)
-					fmt.Printf("Foo.lpl\n")
+					fmt.Printf("%s.lpl\n", system)
 					found++
 				}
 			}
 			wg.Done()
-		}(rdb, CRC32)
+		}(rdb, CRC32, system)
 	}
 	wg.Wait()
 }
