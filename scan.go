@@ -65,6 +65,19 @@ func allFilesIn(dir string) []string {
 	return roms
 }
 
+// writePlaylistEntry writes a playlist entry
+func writePlaylistEntry(rompath string, romname string, gamename string, CRC32 uint32, system string) {
+	CRC32Str := strconv.FormatUint(uint64(CRC32), 10)
+	lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	lpl.WriteString(rompath + "#" + romname + "\n")
+	lpl.WriteString(gamename + "\n")
+	lpl.WriteString("DETECT\n")
+	lpl.WriteString("DETECT\n")
+	lpl.WriteString(CRC32Str + "|crc\n")
+	lpl.WriteString(system + ".lpl\n")
+	lpl.Close()
+}
+
 // findInDB loops over the RDBs in the DB and concurrently matches CRC32 checksums.
 func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 	var wg sync.WaitGroup
@@ -77,15 +90,7 @@ func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 				// If the checksums match
 				if CRC32 == game.CRC32 {
 					// Write the playlist entry
-					CRC32Str := strconv.FormatUint(uint64(CRC32), 10)
-					lpl, _ := os.OpenFile("playlists/"+system+".lpl", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-					lpl.WriteString(rompath + "#" + romname + "\n")
-					lpl.WriteString(game.Name + "\n")
-					lpl.WriteString("DETECT\n")
-					lpl.WriteString("DETECT\n")
-					lpl.WriteString(CRC32Str + "|crc\n")
-					lpl.WriteString(system + ".lpl\n")
-					lpl.Close()
+					writePlaylistEntry(rompath, romname, game.Name, CRC32, system)
 					matched++
 				}
 			}
