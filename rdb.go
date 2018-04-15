@@ -41,6 +41,36 @@ const (
 	MPF_NIL = 0xc0
 )
 
+func setField(g *Game, key string, value string) {
+	switch key {
+	case "name":
+		g.Name = string(value[:])
+	case "description":
+		g.Description = string(value[:])
+	case "genre":
+		g.Genre = string(value[:])
+	case "developer":
+		g.Developer = string(value[:])
+	case "publisher":
+		g.Publisher = string(value[:])
+	case "franchise":
+		g.Franchise = string(value[:])
+	case "serial":
+		g.Serial = string(value[:])
+	case "rom_name":
+		g.ROM.Name = string(value[:])
+	case "size":
+		value2 := fmt.Sprintf("%x", string(value[:]))
+		u64, _ := strconv.ParseUint(value2, 16, 32)
+		g.ROM.Size = u64
+	case "crc":
+		value2 := fmt.Sprintf("%x", string(value[:]))
+		u64, _ := strconv.ParseUint(value2, 16, 32)
+		g.ROM.CRC32 = uint32(u64)
+		//fmt.Println(uint32(u64))
+	}
+}
+
 func parseRDB(path string) []Game {
 	rdb, _ := ioutil.ReadFile(path)
 
@@ -73,7 +103,6 @@ func parseRDB(path string) []Game {
 			pos++
 			iskey = true
 			continue
-			// Read map
 		} else if fieldtype < MPF_FIXSTR {
 			// len := fieldtype - MPF_FIXARRAY
 			//fmt.Println("ARRAY")
@@ -125,42 +154,13 @@ func parseRDB(path string) []Game {
 			continue
 		}
 
-		// keys
 		if iskey {
 			key = string(value[:])
 			//fmt.Println("KEY SET TO:", key)
-			iskey = false
 		} else {
-			// fields
-			switch string(key[:]) {
-			case "name":
-				g.Name = string(value[:])
-			case "description":
-				g.Description = string(value[:])
-			case "genre":
-				g.Genre = string(value[:])
-			case "developer":
-				g.Developer = string(value[:])
-			case "publisher":
-				g.Publisher = string(value[:])
-			case "franchise":
-				g.Franchise = string(value[:])
-			case "serial":
-				g.Serial = string(value[:])
-			case "rom_name":
-				g.ROM.Name = string(value[:])
-			case "size":
-				value2 := fmt.Sprintf("%x", string(value[:]))
-				u64, _ := strconv.ParseUint(value2, 16, 32)
-				g.ROM.Size = u64
-			case "crc":
-				value2 := fmt.Sprintf("%x", string(value[:]))
-				u64, _ := strconv.ParseUint(value2, 16, 32)
-				g.ROM.CRC32 = uint32(u64)
-				//fmt.Println(uint32(u64))
-			}
-			iskey = true
+			setField(&g, key, string(value[:]))
 		}
+		iskey = !iskey
 	}
 
 	return output
