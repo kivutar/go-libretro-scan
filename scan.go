@@ -29,21 +29,23 @@ type Game struct {
 	ROM         ROM
 }
 
+type RDB []Game
+type DB map[string]RDB
+
 var found uint64
 
-func loadDB(dir string) [][]Game {
+func loadDB(dir string) DB {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var DB = [][]Game{}
+	db := make(DB)
 	for _, f := range files {
-		rdb := parseRDB(dir + f.Name())
-		DB = append(DB, rdb)
+		db[f.Name()] = parseRDB(dir + f.Name())
 	}
 
-	return DB
+	return db
 }
 
 func allFilesIn(dir string) []string {
@@ -57,11 +59,11 @@ func allFilesIn(dir string) []string {
 	return roms
 }
 
-func findInDB(DB [][]Game, rompath string, romname string, CRC32 uint32) {
+func findInDB(db DB, rompath string, romname string, CRC32 uint32) {
 	var wg sync.WaitGroup
-	wg.Add(len(DB))
-	for _, rdb := range DB {
-		go func(rdb []Game, CRC32 uint32) {
+	wg.Add(len(db))
+	for _, rdb := range db {
+		go func(rdb RDB, CRC32 uint32) {
 			for _, game := range rdb {
 				if CRC32 == game.ROM.CRC32 {
 					fmt.Printf("%s#%s\n", rompath, romname)
@@ -86,9 +88,9 @@ func main() {
 
 	start := time.Now()
 
-	DB := loadDB(*rdbpath)
+	db := loadDB(*rdbpath)
 	roms := allFilesIn(*rompath)
-	fmt.Println(len(DB), "RDB files and", len(roms), "zips to scan.")
+	fmt.Println(len(db), "RDB files and", len(roms), "zips to scan.")
 
 	elapsed := time.Since(start)
 	fmt.Println("Loading DB took ", elapsed)
@@ -101,7 +103,7 @@ func main() {
 			z, _ := zip.OpenReader(f)
 			for _, rom := range z.File {
 				if rom.CRC32 > 0 {
-					findInDB(DB, f, rom.Name, rom.CRC32)
+					findInDB(db, f, rom.Name, rom.CRC32)
 				}
 			}
 			z.Close()

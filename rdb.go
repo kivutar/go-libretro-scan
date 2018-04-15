@@ -71,10 +71,10 @@ func setField(g *Game, key string, value string) {
 	}
 }
 
-func parseRDB(path string) []Game {
+func parseRDB(path string) RDB {
 	rdb, _ := ioutil.ReadFile(path)
 
-	var output []Game
+	var output RDB
 
 	pos := 0x10
 
